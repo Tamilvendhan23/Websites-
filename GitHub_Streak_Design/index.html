@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>GitHub Contribution Name Drawer — Clean UI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Plan which dates to add commits so your GitHub contribution grid spells a word.">
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --muted:#94a3b8;
+      --accent:#6ee7b7;
+      --accent-2:#34d399;
+      --panel:#071025;
+      --glass: rgba(255,255,255,0.03);
+      --danger:#ff6b6b;
+      --radius:12px;
+      --max-width:1100px;
+      --gap:16px;
+      --cell-size:14px;
+      --cell-gap:6px;
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    /* Global */
+    html,body{height:100%}
+    body{
+      margin:0;
+      background: linear-gradient(180deg,var(--bg),#071022 140%);
+      color:#e6eef8;
+      font-family:var(--font-sans);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:24px;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+    }
+
+    .wrap{
+      width:100%;
+      max-width:var(--max-width);
+      display:flex;
+      gap:var(--gap);
+      flex-direction:column;
+    }
+
+    /* Header / Hero */
+    header{
+      display:flex;
+      gap:20px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .logo{
+      width:52px;
+      height:52px;
+      background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      color:#042018;
+      box-shadow:0 6px 20px rgba(3,7,18,0.6);
+      flex-shrink:0;
+    }
+    .brand h1{margin:0;font-size:18px;line-height:1}
+    .brand p{margin:0;color:var(--muted);font-size:13px}
+
+    .header-actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .badge{
+      background:var(--glass);
+      padding:8px 12px;
+      border-radius:999px;
+      font-weight:600;
+      font-size:13px;
+      color:var(--accent-2);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+
+    /* Layout: 2 columns on large screens, stacked on small */
+    .main{
+      display:grid;
+      grid-template-columns: 420px 1fr;
+      gap:20px;
+      margin-top:8px;
+    }
+    @media (max-width:980px){
+      .main{grid-template-columns: 1fr;}
+    }
+
+    /* Left panel: controls */
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:0 4px 18px rgba(2,6,23,0.6);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    .field{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+    input[type="text"], input[type="date"], input[type="number"], select{
+      width:100%;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.04);
+      background:transparent;
+      color:inherit;
+      font-size:14px;
+      outline:none;
+      box-sizing:border-box;
+    }
+    input[type="file"]{color:var(--muted)}
+    .small{font-size:12px;color:var(--muted);margin-top:6px}
+
+    .controls-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width:420px){
+      .controls-grid{grid-template-columns:1fr;}
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:10px;
+      border:0;
+      cursor:pointer;
+      font-weight:600;
+      font-size:14px;
+      background:linear-gradient(180deg,var(--accent),var(--accent-2));
+      color:#042018;
+      box-shadow:0 8px 24px rgba(3,7,18,0.45);
+    }
+    .btn-ghost{
+      background:transparent;
+      color:var(--accent-2);
+      border:1px solid rgba(255,255,255,0.04);
+      padding:9px 12px;
+      border-radius:10px;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .muted{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    /* Right panel: preview and outputs */
+    .preview-area{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .preview-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .legend{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .legend .sw{
+      width:14px;height:14px;border-radius:3px;border:1px solid rgba(255,255,255,0.02);
+      display:inline-block;
+    }
+    .legend .l0{background:#eee}
+    .legend .l1{background:#c6f6d5}
+    .legend .l2{background:#9be9a8}
+    .legend .l3{background:#40c463}
+    .legend .l4{background:#216e39}
+    .legend .need{border:2px solid var(--danger);border-radius:4px;padding:2px 6px;color:var(--danger);background:transparent}
+
+    /* Grid preview */
+    .grid-wrap{
+      background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
+      padding:14px;
+      border-radius:12px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      overflow:auto;
+    }
+    .grid{
+      display:grid;
+      grid-auto-flow: column;
+      gap:var(--cell-gap);
+      padding-bottom:6px;
+    }
+    .col{
+      display:grid;
+      grid-template-rows: repeat(7, var(--cell-size));
+      gap:var(--cell-gap);
+    }
+    .cell{
+      width:var(--cell-size);
+      height:var(--cell-size);
+      border-radius:3px;
+      background:#efefef;
+      box-sizing:border-box;
+      transition:transform .08s ease;
+      border:1px solid rgba(2,6,23,0.05);
+    }
+    .cell.level-0{ background:#e9eef2; opacity:0.35 }
+    .cell.level-1{ background:#c6f6d5 }
+    .cell.level-2{ background:#9be9a8 }
+    .cell.level-3{ background:#40c463 }
+    .cell.level-4{ background:#216e39 }
+    .cell.needs-extra{ outline:3px solid rgba(255,107,107,0.92); outline-offset:-4px; }
+
+    .grid-scroll{ overflow:auto; max-width:100%; padding-bottom:6px; }
+
+    /* Output area */
+    .outputs{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width:900px){ .outputs{ grid-template-columns: 1fr; } }
+
+    pre{
+      margin:0;
+      background:#041021;
+      padding:12px;
+      border-radius:10px;
+      color:#bfeee0;
+      font-size:13px;
+      overflow:auto;
+      max-height:340px;
+    }
+
+    .meta{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.4;
+    }
+
+    .info-block{
+      background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.006));
+      border-radius:10px;
+      padding:12px;
+      border:1px solid rgba(255,255,255,0.02);
+      margin-bottom:8px;
+    }
+
+    .footer{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:13px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .warn{ color: #ffb4b4; font-weight:600; margin-top:8px }
+    .ok{ color: #9ee7c8; font-weight:600; margin-top:8px }
+
+    /* Small tweaks to inputs for dark look */
+    input, select { background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03) }
+    input:focus, select:focus { box-shadow: 0 4px 18px rgba(66,153,225,0.06); border-color: rgba(99,102,241,0.22) }
+
+  </style>
+</head>
+<body>
+  <div class="wrap" role="main">
+    <header>
+      <div class="brand" aria-hidden="false">
+        <div class="logo" title="Drawer">GH</div>
+        <div>
+          <h1>GitHub Contribution Name Drawer</h1>
+          <p>Plan which dates to add commits so your contribution graph spells words (e.g., "TAMIL").</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="badge">Safe & Local</div>
+        <div class="muted">Works offline — generates dates & scripts you run locally</div>
+      </div>
+    </header>
+
+    <div class="main">
+      <!-- Controls panel -->
+      <div class="card" aria-labelledby="controls-heading">
+        <h2 id="controls-heading" style="margin:0 0 10px 0">Inputs & options</h2>
+
+        <div class="info-block">
+          <div style="font-weight:700">What this tool does</div>
+          <div class="meta">It converts text into a 5×7 pixel font mapped onto GitHub's weekly contribution grid (Sunday → top). For each "on" pixel it computes how many commits you should make on that date. The page generates a CSV and an example script that creates backdated empty commits — you run those locally in a repo you control.</div>
+        </div>
+
+        <div style="margin-top:8px">
+          <label for="text">Text to draw</label>
+          <input id="text" type="text" value="TAMIL" aria-label="Text to draw" />
+          <div class="small">Uppercase looks best with the built-in font. Supported: A–Z, 0–9, space.</div>
+        </div>
+
+        <div class="controls-grid" style="margin-top:12px">
+          <div>
+            <label for="start">Start date</label>
+            <input id="start" type="date" />
+          </div>
+          <div>
+            <label for="end">End date (inclusive)</label>
+            <input id="end" type="date" />
+          </div>
+        </div>
+
+        <div class="controls-grid" style="margin-top:12px">
+          <div>
+            <label for="intensity">Commits per "on" pixel (intensity)</label>
+            <input id="intensity" type="number" value="3" min="1" max="50" />
+          </div>
+          <div>
+            <label for="letter-spacing">Letter spacing (columns)</label>
+            <input id="letter-spacing" type="number" value="1" min="0" max="5" />
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <label for="baseline-mode">Baseline (your existing contributions)</label>
+          <select id="baseline-mode">
+            <option value="assume">Assume uniform commits/day</option>
+            <option value="csv">Upload CSV of existing contributions</option>
+          </select>
+        </div>
+
+        <div id="baseline-assume" style="margin-top:10px">
+          <label for="assume-count">Assume commits per day</label>
+          <input id="assume-count" type="number" value="1" min="0" max="50" />
+          <div class="small">Use this if you contribute roughly the same amount every day.</div>
+        </div>
+
+        <div id="baseline-csv" style="display:none; margin-top:10px">
+          <label for="csvfile">Upload CSV (date,commits)</label>
+          <input id="csvfile" type="file" accept=".csv,text/csv" />
+          <div class="small">CSV header must be: date,commits (YYYY-MM-DD). We only use this locally in your browser.</div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:14px;align-items:center">
+          <button id="generate" class="btn" title="Generate preview and CSV">Generate preview & CSV</button>
+          <button id="reset" class="btn-ghost" title="Reset all inputs">Reset</button>
+        </div>
+
+        <div id="messages" class="warn" role="status" aria-live="polite"></div>
+
+        <div style="margin-top:14px" class="small">
+          <strong>Notes:</strong> The start date is aligned to the previous (or same) Sunday because GitHub's contribution graph columns start on Sunday. Generated scripts create empty commits with backdated author/committer dates — run them only in a dedicated repository branch.
+        </div>
+      </div>
+
+      <!-- Preview & outputs -->
+      <div class="preview-area">
+        <div class="card">
+          <div class="preview-top">
+            <div>
+              <h3 style="margin:0">Preview</h3>
+              <div class="small">Top = Sunday · Bottom = Saturday · Hover squares for details</div>
+            </div>
+            <div class="legend" aria-hidden="true">
+              <span class="sw l1"></span><span class="muted">1</span>
+              <span class="sw l2"></span><span class="muted">2–3</span>
+              <span class="sw l3"></span><span class="muted">4–6</span>
+              <span class="sw l4"></span><span class="muted">7+</span>
+              <span style="width:8px"></span>
+              <span class="need">Needs extra</span>
+            </div>
+          </div>
+
+          <div class="grid-wrap" id="grid-wrap" style="margin-top:12px">
+            <div id="grid" class="grid" aria-hidden="true"></div>
+          </div>
+
+          <div class="footer">
+            <div class="meta" id="preview-meta">No preview yet — generate to see dates.</div>
+            <div style="display:flex;gap:8px">
+              <button id="copy" class="btn-ghost" title="Copy CSV">Copy CSV</button>
+              <button id="download-csv" class="btn-ghost" title="Download CSV">Download CSV</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="outputs">
+          <div class="card">
+            <h4 style="margin-top:0">CSV (dates to add)</h4>
+            <div class="small">Only lists additional commits required (won't attempt to reduce history).</div>
+            <pre id="csvout">No CSV yet. Click "Generate preview & CSV".</pre>
+          </div>
+
+          <div class="card">
+            <h4 style="margin-top:0">Example script</h4>
+            <div class="small">Run this in a repo/branch you control. It creates only the additional backdated commits shown in the CSV.</div>
+            <pre id="scriptout">No script yet. Click "Generate preview & CSV".</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h3 style="margin-top:0">How it works (short)</h3>
+      <div class="meta">
+        - Text is converted to pixels using a 5×7 font (A–Z, 0–9, space). Each character occupies 5 columns × 7 rows.<br>
+        - Columns map to GitHub weeks (columns). Rows map to days of the week (Sunday at top).<br>
+        - For each "on" pixel we calculate the desired number of commits (intensity). We then subtract your baseline contributions and list the additional commits needed per date.<br>
+        - The generated script makes empty commits with GIT_AUTHOR_DATE / GIT_COMMITTER_DATE set to the target date. Push commits to the repository tied to your GitHub account to see them in your graph.
+      </div>
+    </div>
+  </div>
+
+<script>
+/* --- FONT & utilities (logic preserved) --- */
+/* 5x7 font mapping (A-Z, 0-9, space) */
+const FONT = {
+  ' ': ['00000','00000','00000','00000','00000','00000','00000'],
+  'A': ['01110','10001','10001','11111','10001','10001','10001'],
+  'B': ['11110','10001','10001','11110','10001','10001','11110'],
+  'C': ['01110','10001','10000','10000','10000','10001','01110'],
+  'D': ['11110','10001','10001','10001','10001','10001','11110'],
+  'E': ['11111','10000','10000','11110','10000','10000','11111'],
+  'F': ['11111','10000','10000','11110','10000','10000','00000'],
+  'G': ['01110','10001','10000','10111','10001','10001','01110'],
+  'H': ['10001','10001','10001','11111','10001','10001','10001'],
+  'I': ['01110','00100','00100','00100','00100','00100','01110'],
+  'J': ['00111','00010','00010','00010','00010','10010','01100'],
+  'K': ['10001','10010','10100','11000','10100','10010','10001'],
+  'L': ['10000','10000','10000','10000','10000','10000','11111'],
+  'M': ['10001','11011','10101','10101','10001','10001','10001'],
+  'N': ['10001','11001','10101','10011','10001','10001','10001'],
+  'O': ['01110','10001','10001','10001','10001','10001','01110'],
+  'P': ['11110','10001','10001','11110','10000','10000','00000'],
+  'Q': ['01110','10001','10001','10001','10101','10010','01101'],
+  'R': ['11110','10001','10001','11110','10100','10010','10001'],
+  'S': ['01111','10000','10000','01110','00001','00001','11110'],
+  'T': ['11111','00100','00100','00100','00100','00100','00100'],
+  'U': ['10001','10001','10001','10001','10001','10001','01110'],
+  'V': ['10001','10001','10001','10001','10001','01010','00100'],
+  'W': ['10001','10001','10001','10101','10101','11011','10001'],
+  'X': ['10001','10001','01010','00100','01010','10001','10001'],
+  'Y': ['10001','10001','01010','00100','00100','00100','00100'],
+  'Z': ['11111','00001','00010','00100','01000','10000','11111'],
+  '0': ['01110','10001','11001','10101','10011','10001','01110'],
+  '1': ['00100','01100','00100','00100','00100','00100','01110'],
+  '2': ['01110','10001','00001','00010','00100','01000','11111'],
+  '3': ['01110','10001','00001','00110','00001','10001','01110'],
+  '4': ['00010','00110','01010','10010','11111','00010','00010'],
+  '5': ['11111','10000','10000','11110','00001','10001','01110'],
+  '6': ['00110','01000','10000','11110','10001','10001','01110'],
+  '7': ['11111','00001','00010','00100','01000','01000','01000'],
+  '8': ['01110','10001','10001','01110','10001','10001','01110'],
+  '9': ['01110','10001','10001','01111','00001','00010','01100']
+};
+
+/* Date helpers */
+function parseDate(str) {
+  if(!str) return null;
+  const [y,m,d] = str.split('-').map(Number);
+  return new Date(Date.UTC(y, m-1, d));
+}
+function fmt(d) {
+  const yy = d.getUTCFullYear();
+  const mm = String(d.getUTCMonth()+1).padStart(2,'0');
+  const dd = String(d.getUTCDate()).padStart(2,'0');
+  return `${yy}-${mm}-${dd}`;
+}
+function addDays(date, days) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + days));
+}
+function prevSunday(date) {
+  const day = date.getUTCDay();
+  return addDays(date, -day);
+}
+
+/* Convert text to columns (5x7) */
+function textToColumns(text, spacing = 1) {
+  text = text.toUpperCase();
+  let columns = [];
+  for (let i=0;i<text.length;i++) {
+    const ch = text[i];
+    const rows = FONT[ch] || FONT[' '];
+    for (let col=0;col<5;col++) {
+      const colBits = [];
+      for (let r=0;r<7;r++) {
+        colBits.push(rows[r][col] === '1' ? 1 : 0);
+      }
+      columns.push(colBits);
+    }
+    for (let s=0;s<spacing;s++) columns.push([0,0,0,0,0,0,0]);
+  }
+  while (columns.length && columns[columns.length-1].every(b=>b===0)) columns.pop();
+  return columns;
+}
+
+/* Build required counts from columns */
+function columnsToDates(columns, startSunday, intensity=1) {
+  const dateCounts = {};
+  for (let c=0;c<columns.length;c++) {
+    for (let r=0;r<7;r++) {
+      if (columns[c][r]) {
+        const date = addDays(startSunday, c*7 + r);
+        const ds = fmt(date);
+        dateCounts[ds] = (dateCounts[ds] || 0) + intensity;
+      }
+    }
+  }
+  return dateCounts;
+}
+
+/* CSV parser for baseline CSV file */
+function parseCSVContent(text) {
+  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l.length>0);
+  if (lines.length === 0) return {};
+  lines[0] = lines[0].replace(/^\uFEFF/, '');
+  const header = lines[0].split(',').map(h=>h.trim().toLowerCase());
+  const dateIdx = header.indexOf('date');
+  const commitsIdx = header.indexOf('commits');
+  if (dateIdx === -1 || commitsIdx === -1) {
+    alert('CSV must include header with "date" and "commits" columns.');
+    return null;
+  }
+  const map = {};
+  for (let i=1;i<lines.length;i++) {
+    const parts = lines[i].split(',').map(p=>p.trim());
+    const date = parts[dateIdx];
+    const commits = parseInt(parts[commitsIdx] || '0', 10) || 0;
+    if (date) map[date] = commits;
+  }
+  return map;
+}
+
+/* Rendering: grid preview (keeps same class names used by CSS) */
+function renderGrid(columns, startSunday, existingCounts, requiredCounts, additions) {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  for (let c=0;c<columns.length;c++) {
+    const colEl = document.createElement('div');
+    colEl.className = 'col';
+    for (let r=0;r<7;r++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell level-0';
+      const date = addDays(startSunday, c*7 + r);
+      const ds = fmt(date);
+      const existing = existingCounts[ds] || 0;
+      const required = requiredCounts[ds] || 0;
+      const addition = additions[ds] || 0;
+      const finalTotal = existing + addition;
+
+      let level = 0;
+      if (finalTotal === 0) level = 0;
+      else if (finalTotal <= 1) level = 1;
+      else if (finalTotal <= 3) level = 2;
+      else if (finalTotal <= 6) level = 3;
+      else level = 4;
+      cell.classList.remove('level-0','level-1','level-2','level-3','level-4');
+      cell.classList.add('level-'+level);
+
+      if (addition > 0) cell.classList.add('needs-extra');
+
+      cell.title = ds + ' — existing: ' + existing + ' | required: ' + required + ' | add: ' + addition;
+      colEl.appendChild(cell);
+    }
+    grid.appendChild(colEl);
+  }
+}
+
+/* --- UI wiring (preserve behavior) --- */
+document.getElementById('baseline-mode').addEventListener('change', (e) => {
+  const v = e.target.value;
+  document.getElementById('baseline-assume').style.display = v === 'assume' ? 'block' : 'none';
+  document.getElementById('baseline-csv').style.display = v === 'csv' ? 'block' : 'none';
+});
+
+document.getElementById('reset').addEventListener('click', () => {
+  document.getElementById('text').value = 'TAMIL';
+  document.getElementById('start').value = '';
+  document.getElementById('end').value = '';
+  document.getElementById('intensity').value = '3';
+  document.getElementById('letter-spacing').value = '1';
+  document.getElementById('baseline-mode').value = 'assume';
+  document.getElementById('baseline-assume').style.display = 'block';
+  document.getElementById('baseline-csv').style.display = 'none';
+  document.getElementById('assume-count').value = '1';
+  document.getElementById('csvout').textContent = 'No CSV yet. Click "Generate preview & CSV".';
+  document.getElementById('scriptout').textContent = 'No script yet. Click "Generate preview & CSV".';
+  document.getElementById('messages').textContent = '';
+  document.getElementById('grid').innerHTML = '';
+  document.getElementById('preview-meta').textContent = 'No preview yet — generate to see dates.';
+});
+
+/* Generate process (keeps same validations & CSV/script output) */
+document.getElementById('generate').addEventListener('click', async () => {
+  const text = document.getElementById('text').value || '';
+  const startStr = document.getElementById('start').value;
+  const endStr = document.getElementById('end').value;
+  const intensity = Math.max(1, parseInt(document.getElementById('intensity').value || 1));
+  const spacing = Math.max(0, parseInt(document.getElementById('letter-spacing').value || 1));
+  const messages = document.getElementById('messages');
+  messages.textContent = '';
+  if (!text.trim()) { messages.textContent = 'Please enter text to draw.'; return; }
+  const startDate = parseDate(startStr);
+  const endDate = parseDate(endStr);
+  if (!startDate || !endDate) { messages.textContent = 'Please enter valid start and end dates.'; return; }
+  if (endDate < startDate) { messages.textContent = 'End date must be same or after start date.'; return; }
+
+  const columns = textToColumns(text, spacing);
+  if (columns.length === 0) { messages.textContent = 'Text produced no pixels (empty or unsupported characters).'; return; }
+
+  const startSunday = prevSunday(startDate);
+  const requiredLastDate = addDays(startSunday, columns.length*7 - 1);
+  if (requiredLastDate > endDate) {
+    messages.innerHTML = 'Date range too short for the text. Required last date (aligned to Sunday): <strong>' + fmt(requiredLastDate) + '</strong>';
+    document.getElementById('preview-meta').textContent = 'Date range too short — adjust dates.';
+    return;
+  }
+
+  const requiredCounts = columnsToDates(columns, startSunday, intensity);
+
+  const baselineMode = document.getElementById('baseline-mode').value;
+  let existingCounts = {};
+  if (baselineMode === 'assume') {
+    const v = Math.max(0, parseInt(document.getElementById('assume-count').value || '0'));
+    const totalDays = Math.ceil(( (requiredLastDate - startSunday) / (1000*60*60*24) )) + 1;
+    for (let i=0;i<totalDays;i++) {
+      const date = fmt(addDays(startSunday, i));
+      existingCounts[date] = v;
+    }
+  } else {
+    const fileInput = document.getElementById('csvfile');
+    if (!fileInput.files || fileInput.files.length === 0) {
+      messages.textContent = 'Please upload a CSV of existing contributions or switch to "Assume commits/day".';
+      return;
+    }
+    try {
+      const file = fileInput.files[0];
+      const textContent = await file.text();
+      const parsed = parseCSVContent(textContent);
+      if (parsed === null) return;
+      existingCounts = parsed;
+      const totalDays = Math.ceil(( (requiredLastDate - startSunday) / (1000*60*60*24) )) + 1;
+      for (let i=0;i<totalDays;i++) {
+        const date = fmt(addDays(startSunday, i));
+        if (!(date in existingCounts)) existingCounts[date] = 0;
+      }
+    } catch (err) {
+      messages.textContent = 'Error reading CSV: ' + err.message;
+      return;
+    }
+  }
+
+  // Compute additions
+  const additions = {};
+  const allDates = new Set(Object.keys(requiredCounts).concat(Object.keys(existingCounts)));
+  for (const d of allDates) {
+    const req = requiredCounts[d] || 0;
+    const ex = existingCounts[d] || 0;
+    const add = Math.max(0, req - ex);
+    if (add > 0) additions[d] = add;
+  }
+
+  // CSV output
+  const addedDates = Object.keys(additions).sort();
+  const lines = [];
+  for (const d of addedDates) lines.push(`${d},${additions[d]}`);
+  const csv = 'date,commits\n' + lines.join('\n');
+  document.getElementById('csvout').textContent = (lines.length ? csv : 'date,commits\n');
+
+  // summary + preview render
+  let totalAdd = 0, daysAdd = addedDates.length;
+  for (const d of addedDates) totalAdd += additions[d];
+  const meta = `Days that need extra commits: ${daysAdd}. Total additional commits required: ${totalAdd}. Start Sunday used for alignment: ${fmt(startSunday)}. Required last date (inclusive): ${fmt(requiredLastDate)}.`;
+  document.getElementById('preview-meta').textContent = meta;
+
+  renderGrid(columns, startSunday, existingCounts, requiredCounts, additions);
+
+  document.getElementById('scriptout').textContent = generateAdditionsScript();
+  document.getElementById('messages').textContent = '';
+});
+
+/* Copy & download */
+document.getElementById('copy').addEventListener('click', async () => {
+  const csv = document.getElementById('csvout').textContent;
+  try {
+    await navigator.clipboard.writeText(csv);
+    document.getElementById('messages').textContent = 'CSV copied to clipboard.';
+    document.getElementById('messages').className = 'ok';
+    setTimeout(()=>{ document.getElementById('messages').textContent=''; document.getElementById('messages').className='warn'; }, 2500);
+  } catch (e) {
+    alert('Copy failed. You can manually select and copy the CSV text.');
+  }
+});
+document.getElementById('download-csv').addEventListener('click', () => {
+  const csv = document.getElementById('csvout').textContent;
+  const blob = new Blob([csv], {type: 'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'github_contrib_additions.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* Script generator (unchanged logic output) */
+function generateAdditionsScript() {
+  return `#!/bin/bash
+# Example: create ONLY the additional backdated empty commits listed in github_contrib_additions.csv
+# WARNING: run this only in a repository you control (dedicated repo is recommended).
+# CSV format:
+# date,commits
+# 2025-11-02,2
+
+CSV_FILE="github_contrib_additions.csv"
+if [ ! -f "$CSV_FILE" ]; then
+  echo "CSV file $CSV_FILE not found. Put the additions CSV here."
+  exit 1
+fi
+
+while IFS=, read -r date commits; do
+  if [ "$date" = "date" ]; then
+    continue
+  fi
+  # normalize fields
+  date=$(echo "$date" | tr -d '\\r' | xargs)
+  commits=$(echo "$commits" | tr -d '\\r' | xargs)
+  for ((i=1;i<=commits;i++)); do
+    export GIT_AUTHOR_DATE="${date}T12:00:00"
+    export GIT_COMMITTER_DATE="${date}T12:00:00"
+    git commit --allow-empty -m "Contribution for ${date} (auto)"
+  done
+done < "$CSV_FILE"
+
+echo "Done. Now push: git push origin <branch>"
+`;
+}
+</script>
+</body>
+</html>
